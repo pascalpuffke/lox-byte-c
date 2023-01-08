@@ -1,6 +1,5 @@
 #include <common.h>
 #include <compiler.h>
-#include <macros.h>
 #include <memory.h>
 #include <scanner.h>
 #include <stdio.h>

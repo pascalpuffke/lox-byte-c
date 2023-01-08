@@ -1,8 +1,6 @@
 #include <common.h>
 #include <ctype.h>
-#include <macros.h>
 #include <scanner.h>
-#include <stdio.h>
 #include <string.h>
 
 typedef struct {

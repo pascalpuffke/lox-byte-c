@@ -1,5 +1,4 @@
 #include <compiler.h>
-#include <macros.h>
 #include <memory.h>
 #include <stdlib.h>
 #include <vm.h>
