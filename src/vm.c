@@ -29,10 +29,8 @@
 
 VM vm;
 
-static Value clock_native(int arg_count, Value* args)
+static Value clock_native([[maybe_unused]] int, [[maybe_unused]] Value*)
 {
-    (void)arg_count;
-    (void)args;
     return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
 }
 
@@ -189,7 +187,7 @@ static ObjUpvalue* capture_upvalue(Value* local)
     return created_upvalue;
 }
 
-static void close_upvalues(Value* last)
+static void close_upvalues(const Value* last)
 {
     while (vm.open_upvalues && vm.open_upvalues->location >= last) {
         ObjUpvalue* upvalue = vm.open_upvalues;
@@ -253,8 +251,7 @@ static InterpretResult run()
         printf("\n");
         disassemble_instruction(&frame->closure->function->chunk, (int)(frame->ip - frame->closure->function->chunk.code));
 #endif
-        uint8_t instruction;
-        switch (instruction = READ_BYTE()) {
+        switch (READ_BYTE()) {
         case OP_CONSTANT: {
             Value constant = READ_CONSTANT();
             push(constant);
@@ -502,7 +499,6 @@ static InterpretResult run()
             break;
         default:
             TODO();
-            break;
         }
     }
     UNREACHABLE();

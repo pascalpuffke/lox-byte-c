@@ -243,7 +243,7 @@ Token scan_token()
             match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
     case '"':
         return string();
+    default:
+        return error_token("Unexpected character.");
     }
-
-    return error_token("Unexpected character.");
 }
