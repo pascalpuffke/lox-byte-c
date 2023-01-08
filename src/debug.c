@@ -4,20 +4,20 @@
 #include <stdio.h>
 #include <value.h>
 
-__internal int simple_instruction(const char* name, int offset)
+static int simple_instruction(const char* name, int offset)
 {
     printf("%s\n", name);
     return offset + 1;
 }
 
-__internal int byte_instruction(const char* name, Chunk* chunk, int offset)
+static int byte_instruction(const char* name, Chunk* chunk, int offset)
 {
     uint8_t slot = chunk->code[offset + 1];
     printf("%-16s %4d\n", name, slot);
     return offset + 2;
 }
 
-__internal int jump_instruction(const char* name, int sign, Chunk* chunk, int offset)
+static int jump_instruction(const char* name, int sign, Chunk* chunk, int offset)
 {
     uint16_t jump = (uint16_t)(chunk->code[offset + 1] << 8);
     jump |= chunk->code[offset + 2];
@@ -25,7 +25,7 @@ __internal int jump_instruction(const char* name, int sign, Chunk* chunk, int of
     return offset + 3;
 }
 
-__internal int constant_instruction(const char* name, Chunk* chunk, int offset)
+static int constant_instruction(const char* name, Chunk* chunk, int offset)
 {
     uint8_t constant = chunk->code[offset + 1];
     printf("%-16s %4d '", name, constant);
@@ -34,7 +34,7 @@ __internal int constant_instruction(const char* name, Chunk* chunk, int offset)
     return offset + 2;
 }
 
-__internal int invoke_instruction(const char* name, Chunk* chunk, int offset)
+static int invoke_instruction(const char* name, Chunk* chunk, int offset)
 {
     uint8_t constant = chunk->code[offset + 1];
     uint8_t arg_count = chunk->code[offset + 2];

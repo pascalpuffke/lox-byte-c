@@ -10,7 +10,7 @@
 #define ALLOCATE_OBJ(type, objectType) \
     (type*)allocate_object(sizeof(type), objectType)
 
-__internal Obj* allocate_object(size_t size, ObjType type)
+static Obj* allocate_object(size_t size, ObjType type)
 {
     Obj* object = (Obj*)reallocate(NULL, 0, size);
     object->type = type;
@@ -91,7 +91,7 @@ ObjNative* new_native(NativeFn function)
     return native;
 }
 
-__internal ObjString* allocate_string(char* chars, int length, uint32_t hash)
+static ObjString* allocate_string(char* chars, int length, uint32_t hash)
 {
     ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
     string->length = length;
@@ -103,7 +103,7 @@ __internal ObjString* allocate_string(char* chars, int length, uint32_t hash)
     return string;
 }
 
-__internal uint32_t hash_string(const char* key, int length)
+static uint32_t hash_string(const char* key, int length)
 {
     uint32_t hash = 2166136261u;
     for (int i = 0; i < length; i++) {
@@ -140,7 +140,7 @@ ObjString* copy_string(const char* chars, int length)
     return allocate_string(heap_chars, length, hash);
 }
 
-__internal void print_function(ObjFunction* function)
+static void print_function(ObjFunction* function)
 {
     if (function->name) {
         printf("<fn %.*s>", function->name->length, function->name->chars);

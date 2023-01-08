@@ -36,7 +36,7 @@ static Value clock_native(int arg_count, Value* args)
     return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
 }
 
-__internal void reset_stack()
+static void reset_stack()
 {
     vm.stack_top = vm.stack;
     vm.frame_count = 0;
@@ -65,9 +65,9 @@ static void runtime_error(const char* format, ...)
     reset_stack();
 }
 
-__internal Value peek(int distance) { return vm.stack_top[-1 - distance]; }
+static inline Value peek(int distance) { return vm.stack_top[-1 - distance]; }
 
-__internal bool call(ObjClosure* closure, int arg_count)
+static bool call(ObjClosure* closure, int arg_count)
 {
     if (__glibc_unlikely(arg_count != closure->function->arity)) {
         runtime_error("Expected %d arguments but got %d.", closure->function->arity, arg_count);
@@ -86,7 +86,7 @@ __internal bool call(ObjClosure* closure, int arg_count)
     return true;
 }
 
-__internal bool call_value(Value callee, int arg_count)
+static bool call_value(Value callee, int arg_count)
 {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
@@ -124,7 +124,7 @@ __internal bool call_value(Value callee, int arg_count)
     return false;
 }
 
-__internal bool invoke_from_class(ObjClass* klass, ObjString* name, int arg_count)
+static bool invoke_from_class(ObjClass* klass, ObjString* name, int arg_count)
 {
     Value method;
     if (__glibc_unlikely(!table_get(&klass->methods, name, &method))) {
@@ -134,7 +134,7 @@ __internal bool invoke_from_class(ObjClass* klass, ObjString* name, int arg_coun
     return call(AS_CLOSURE(method), arg_count);
 }
 
-__internal bool invoke(ObjString* name, int arg_count)
+static bool invoke(ObjString* name, int arg_count)
 {
     Value receiver = peek(arg_count);
     if (!IS_INSTANCE(receiver)) {
@@ -153,7 +153,7 @@ __internal bool invoke(ObjString* name, int arg_count)
     return invoke_from_class(instance->klass, name, arg_count);
 }
 
-__internal bool bind_method(ObjClass* klass, ObjString* name)
+static bool bind_method(ObjClass* klass, ObjString* name)
 {
     Value method;
     if (__glibc_unlikely(!table_get(&klass->methods, name, &method))) {
@@ -167,7 +167,7 @@ __internal bool bind_method(ObjClass* klass, ObjString* name)
     return true;
 }
 
-__internal ObjUpvalue* capture_upvalue(Value* local)
+static ObjUpvalue* capture_upvalue(Value* local)
 {
     ObjUpvalue* prev_upvalue = NULL;
     ObjUpvalue* upvalue = vm.open_upvalues;
@@ -189,7 +189,7 @@ __internal ObjUpvalue* capture_upvalue(Value* local)
     return created_upvalue;
 }
 
-__internal void close_upvalues(Value* last)
+static void close_upvalues(Value* last)
 {
     while (vm.open_upvalues && vm.open_upvalues->location >= last) {
         ObjUpvalue* upvalue = vm.open_upvalues;
@@ -199,7 +199,7 @@ __internal void close_upvalues(Value* last)
     }
 }
 
-__internal void define_method(ObjString* name)
+static void define_method(ObjString* name)
 {
     Value method = peek(0);
     ObjClass* klass = AS_CLASS(peek(1));
@@ -207,9 +207,9 @@ __internal void define_method(ObjString* name)
     pop();
 }
 
-__internal bool is_falsey(Value value) { return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value)); }
+static inline bool is_falsey(Value value) { return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value)); }
 
-__internal void concatenate()
+static void concatenate()
 {
     ObjString* b = AS_STRING(peek(0));
     ObjString* a = AS_STRING(peek(1));
@@ -226,10 +226,10 @@ __internal void concatenate()
     push(OBJ_VAL(result));
 }
 
-void push(Value value) { *vm.stack_top++ = value; }
-Value pop() { return *--vm.stack_top; }
+inline void push(Value value) { *vm.stack_top++ = value; }
+inline Value pop() { return *--vm.stack_top; }
 
-__internal void define_native(const char* name, NativeFn function)
+static void define_native(const char* name, NativeFn function)
 {
     push(OBJ_VAL(copy_string(name, (int)strlen(name))));
     push(OBJ_VAL(new_native(function)));
@@ -238,7 +238,7 @@ __internal void define_native(const char* name, NativeFn function)
     pop();
 }
 
-__internal InterpretResult run()
+static InterpretResult run()
 {
     CallFrame* frame = &vm.frames[vm.frame_count - 1];
 

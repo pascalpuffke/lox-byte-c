@@ -31,7 +31,7 @@ void* reallocate(void* pointer, size_t old_size, size_t new_size)
                                        // too bad.
 }
 
-__internal void free_object(Obj* object)
+static void free_object(Obj* object)
 {
 #ifdef DEBUG_LOG_GC
     printf("%p free type %d\n", (void*)object, object->type);
@@ -125,7 +125,7 @@ void mark_value(Value value)
     mark_object(AS_OBJ(value));
 }
 
-__internal void mark_roots()
+static void mark_roots()
 {
     for (Value* slot = vm.stack; slot < vm.stack_top; slot++) {
         mark_value(*slot);
@@ -144,14 +144,14 @@ __internal void mark_roots()
     mark_object((Obj*)vm.init_string);
 }
 
-__internal void mark_array(ValueArray* array)
+static void mark_array(ValueArray* array)
 {
     for (int i = 0; i < array->count; i++) {
         mark_value(array->values[i]);
     }
 }
 
-__internal void blacken_object(Obj* object)
+static void blacken_object(Obj* object)
 {
 #ifdef DEBUG_LOG_GC
     printf("%p blacken ", (void*)object);
@@ -201,7 +201,7 @@ __internal void blacken_object(Obj* object)
     }
 }
 
-__internal void trace_references()
+static void trace_references()
 {
     while (vm.gray_count > 0) {
         Obj* object = vm.gray_stack[--vm.gray_count];
@@ -209,7 +209,7 @@ __internal void trace_references()
     }
 }
 
-__internal void sweep()
+static void sweep()
 {
     Obj* previous = NULL;
     Obj* object = vm.objects;

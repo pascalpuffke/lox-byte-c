@@ -5,7 +5,7 @@
 #include <string.h>
 #include <vm.h>
 
-__internal void repl()
+static void repl()
 {
     char line[1024];
     for (;;) {
@@ -20,7 +20,7 @@ __internal void repl()
     }
 }
 
-__internal char* read_file(const char* path) // returns a heap-allocated string!
+static char* read_file(const char* path) // returns a heap-allocated string!
 {
     FILE* file = fopen(path, "rb");
     if (!file) {
@@ -49,7 +49,7 @@ __internal char* read_file(const char* path) // returns a heap-allocated string!
     return buffer;
 }
 
-__internal void run_file(const char* path)
+static void run_file(const char* path)
 {
     char* source = read_file(path);
     InterpretResult result = interpret(source);

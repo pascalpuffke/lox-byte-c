@@ -13,15 +13,15 @@ typedef struct {
 
 Scanner scanner;
 
-__internal bool is_at_end() { return *scanner.current == '\0'; }
+static inline bool is_at_end() { return *scanner.current == '\0'; }
 
-__internal char advance()
+static inline char advance()
 {
     scanner.current++;
     return scanner.current[-1];
 }
 
-__internal bool match(char expected)
+static inline bool match(char expected)
 {
     if (is_at_end())
         return false;
@@ -31,16 +31,16 @@ __internal bool match(char expected)
     return true;
 }
 
-__internal char peek() { return *scanner.current; }
+static inline char peek() { return *scanner.current; }
 
-__internal char peek_next()
+static inline char peek_next()
 {
     if (is_at_end())
         return '\0';
     return scanner.current[1];
 }
 
-__internal void skip_whitespace()
+static void skip_whitespace()
 {
     while (true) {
         char c = peek();
@@ -68,7 +68,7 @@ __internal void skip_whitespace()
     }
 }
 
-__internal Token make_token(TokenType type)
+static Token make_token(TokenType type)
 {
     Token token;
     token.type = type;
@@ -78,7 +78,7 @@ __internal Token make_token(TokenType type)
     return token;
 }
 
-__internal Token error_token(const char* message)
+static Token error_token(const char* message)
 {
     Token token;
     token.type = TOKEN_ERROR;
@@ -88,7 +88,7 @@ __internal Token error_token(const char* message)
     return token;
 }
 
-__internal Token string()
+static Token string()
 {
     while (peek() != '"' && !is_at_end()) {
         if (peek() == '\n')
@@ -104,7 +104,7 @@ __internal Token string()
     return make_token(TOKEN_STRING);
 }
 
-__internal TokenType check_keyword(int start, int length, const char* rest, TokenType type)
+static TokenType check_keyword(int start, int length, const char* rest, TokenType type)
 {
     if (scanner.current - scanner.start == start + length && memcmp(scanner.start + start, rest, length) == 0)
         return type;
@@ -112,7 +112,7 @@ __internal TokenType check_keyword(int start, int length, const char* rest, Toke
     return TOKEN_IDENTIFIER;
 }
 
-__internal TokenType identifier_type()
+static TokenType identifier_type()
 {
     switch (scanner.start[0]) {
     case 'a':
@@ -163,14 +163,14 @@ __internal TokenType identifier_type()
     return TOKEN_IDENTIFIER;
 }
 
-__internal Token identifier()
+static Token identifier()
 {
     while (isalnum(peek()) || peek() == '_')
         advance();
     return make_token(identifier_type());
 }
 
-__internal Token number()
+static Token number()
 {
     while (isdigit(peek()))
         advance();

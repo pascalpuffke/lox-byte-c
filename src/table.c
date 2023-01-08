@@ -21,7 +21,7 @@ void free_table(Table* table)
     init_table(table);
 }
 
-__internal Entry* find_entry(Entry* entries, int capacity, ObjString* key)
+static Entry* find_entry(Entry* entries, int capacity, ObjString* key)
 {
     uint32_t index = key->hash & (capacity - 1);
     Entry* tombstone = NULL;
@@ -59,7 +59,7 @@ bool table_get(Table* table, ObjString* key, Value* value)
     return true;
 }
 
-__internal void adjust_capacity(Table* table, int capacity)
+static void adjust_capacity(Table* table, int capacity)
 {
     Entry* entries = ALLOCATE(Entry, capacity);
     for (int i = 0; i < capacity; i++) {

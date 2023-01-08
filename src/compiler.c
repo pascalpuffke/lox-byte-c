@@ -78,9 +78,9 @@ Parser parser;
 Compiler* current = NULL;
 ClassCompiler* current_class = NULL;
 
-__internal Chunk* current_chunk() { return &current->function->chunk; }
+static Chunk* current_chunk() { return &current->function->chunk; }
 
-__internal void error_at(Token* token, const char* message)
+static void error_at(Token* token, const char* message)
 {
     if (parser.panic_mode)
         return;
@@ -100,11 +100,11 @@ __internal void error_at(Token* token, const char* message)
     parser.had_error = true;
 }
 
-__internal void error(const char* message) { error_at(&parser.previous, message); }
+static void error(const char* message) { error_at(&parser.previous, message); }
 
-__internal void error_at_current(const char* message) { error_at(&parser.current, message); }
+static void error_at_current(const char* message) { error_at(&parser.current, message); }
 
-__internal void advance()
+static void advance()
 {
     parser.previous = parser.current;
 
@@ -117,7 +117,7 @@ __internal void advance()
     }
 }
 
-__internal void consume(TokenType type, const char* message)
+static void consume(TokenType type, const char* message)
 {
     if (parser.current.type == type) {
         advance();
@@ -127,9 +127,9 @@ __internal void consume(TokenType type, const char* message)
     error_at_current(message);
 }
 
-__internal bool check(TokenType type) { return parser.current.type == type; }
+static bool check(TokenType type) { return parser.current.type == type; }
 
-__internal bool match(TokenType type)
+static bool match(TokenType type)
 {
     if (!check(type))
         return false;
@@ -137,15 +137,15 @@ __internal bool match(TokenType type)
     return true;
 }
 
-__internal void emit_byte(uint8_t byte) { write_chunk(current_chunk(), byte, parser.previous.line); }
+static inline void emit_byte(uint8_t byte) { write_chunk(current_chunk(), byte, parser.previous.line); }
 
-__internal void emit_bytes(uint8_t byte1, uint8_t byte2)
+static inline void emit_bytes(uint8_t byte1, uint8_t byte2)
 {
     emit_byte(byte1);
     emit_byte(byte2);
 }
 
-__internal void emit_loop(int loop_start)
+static void emit_loop(int loop_start)
 {
     emit_byte(OP_LOOP);
 
@@ -157,7 +157,7 @@ __internal void emit_loop(int loop_start)
     emit_byte(offset & 0xff);
 }
 
-__internal int emit_jump(uint8_t instruction)
+static int emit_jump(uint8_t instruction)
 {
     emit_byte(instruction);
     emit_byte(0xff);
@@ -165,7 +165,7 @@ __internal int emit_jump(uint8_t instruction)
     return current_chunk()->count - 2;
 }
 
-__internal void emit_return()
+static void emit_return()
 {
     if (current->type == TYPE_INITIALIZER)
         emit_bytes(OP_GET_LOCAL, 0);
@@ -175,7 +175,7 @@ __internal void emit_return()
     emit_byte(OP_RETURN);
 }
 
-__internal uint8_t make_constant(Value value)
+static uint8_t make_constant(Value value)
 {
     int constant = add_constant(current_chunk(), value);
     if (constant > UINT8_MAX) {
@@ -186,9 +186,9 @@ __internal uint8_t make_constant(Value value)
     return (uint8_t)constant;
 }
 
-__internal void emit_constant(Value value) { emit_bytes(OP_CONSTANT, make_constant(value)); }
+static inline void emit_constant(Value value) { emit_bytes(OP_CONSTANT, make_constant(value)); }
 
-__internal void patch_jump(int offset)
+static void patch_jump(int offset)
 {
     // -2 to adjust for the bytecode for the jump offset itself.
     int jump = current_chunk()->count - offset - 2;
@@ -199,7 +199,7 @@ __internal void patch_jump(int offset)
     current_chunk()->code[offset + 1] = jump & 0xff;
 }
 
-__internal void init_compiler(Compiler* compiler, FunctionType type)
+static void init_compiler(Compiler* compiler, FunctionType type)
 {
     compiler->enclosing = (struct Compiler*)current;
     compiler->function = NULL;
@@ -225,7 +225,7 @@ __internal void init_compiler(Compiler* compiler, FunctionType type)
     }
 }
 
-__internal ObjFunction* end_compiler()
+static ObjFunction* end_compiler()
 {
     emit_return();
     ObjFunction* function = current->function;
@@ -240,8 +240,8 @@ __internal ObjFunction* end_compiler()
     return function;
 }
 
-__internal void begin_scope() { current->scope_depth++; }
-__internal void end_scope()
+static void begin_scope() { current->scope_depth++; }
+static void end_scope()
 {
     current->scope_depth--;
 
@@ -254,18 +254,18 @@ __internal void end_scope()
     }
 }
 
-__internal void expression();
-__internal void statement();
-__internal void declaration();
-__internal ParseRule* get_rule(TokenType);
-__internal void parse_precedence(Precedence);
-__internal uint8_t identifier_constant(Token*);
-__internal int resolve_local(Compiler*, Token*);
-__internal int resolve_upvalue(Compiler* compiler, Token* name);
-__internal uint8_t argument_list();
-__internal void and_(bool);
+static void expression();
+static void statement();
+static void declaration();
+static ParseRule* get_rule(TokenType);
+static void parse_precedence(Precedence);
+static uint8_t identifier_constant(Token*);
+static int resolve_local(Compiler*, Token*);
+static int resolve_upvalue(Compiler* compiler, Token* name);
+static uint8_t argument_list();
+static void and_(bool);
 
-__internal void binary(bool can_assign)
+static void binary(bool can_assign)
 {
     (void)can_assign;
     TokenType operator_type = parser.previous.type;
@@ -308,14 +308,14 @@ __internal void binary(bool can_assign)
     }
 }
 
-__internal void call(bool can_assign)
+static void call(bool can_assign)
 {
     (void)can_assign;
     uint8_t arg_count = argument_list();
     emit_bytes(OP_CALL, arg_count);
 }
 
-__internal void dot(bool can_assign)
+static void dot(bool can_assign)
 {
     consume(TOKEN_IDENTIFIER, "Expect property name after '.'.");
     uint8_t name = identifier_constant(&parser.previous);
@@ -332,7 +332,7 @@ __internal void dot(bool can_assign)
     }
 }
 
-__internal void literal(bool can_assign)
+static void literal(bool can_assign)
 {
     (void)can_assign;
     switch (parser.previous.type) {
@@ -350,21 +350,21 @@ __internal void literal(bool can_assign)
     }
 }
 
-__internal void grouping(bool can_assign)
+static void grouping(bool can_assign)
 {
     (void)can_assign;
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-__internal void number(bool can_assign)
+static void number(bool can_assign)
 {
     (void)can_assign;
     double value = strtod(parser.previous.start, NULL);
     emit_constant(NUMBER_VAL(value));
 }
 
-__internal void or_(bool can_assign)
+static void or_(bool can_assign)
 {
     (void)can_assign;
     int else_jump = emit_jump(OP_JUMP_IF_FALSE);
@@ -377,13 +377,13 @@ __internal void or_(bool can_assign)
     patch_jump(end_jump);
 }
 
-__internal void string(bool can_assign)
+static void string(bool can_assign)
 {
     (void)can_assign;
     emit_constant(OBJ_VAL(copy_string(parser.previous.start + 1, parser.previous.length - 2)));
 }
 
-__internal void named_variable(Token name, bool can_assign)
+static void named_variable(Token name, bool can_assign)
 {
     uint8_t get_op, set_op;
     int arg = resolve_local(current, &name);
@@ -407,9 +407,9 @@ __internal void named_variable(Token name, bool can_assign)
     }
 }
 
-__internal void variable(bool can_assign) { named_variable(parser.previous, can_assign); }
+static void variable(bool can_assign) { named_variable(parser.previous, can_assign); }
 
-__internal Token synthetic_token(const char* text)
+static Token synthetic_token(const char* text)
 {
     Token token;
     token.start = text;
@@ -417,7 +417,7 @@ __internal Token synthetic_token(const char* text)
     return token;
 }
 
-__internal void super_(bool can_assign)
+static void super_(bool can_assign)
 {
     if (!current_class)
         error("Can't use 'super' outside of a class.");
@@ -442,7 +442,7 @@ __internal void super_(bool can_assign)
     }
 }
 
-__internal void this_(bool can_assign)
+static void this_(bool can_assign)
 {
     (void)can_assign;
 
@@ -454,7 +454,7 @@ __internal void this_(bool can_assign)
     variable(false);
 }
 
-__internal void unary(bool can_assign)
+static void unary(bool can_assign)
 {
     (void)can_assign;
     TokenType operator_type = parser.previous.type;
@@ -520,7 +520,7 @@ ParseRule rules[] = {
 };
 // clang-format on
 
-__internal void parse_precedence(Precedence precedence)
+static void parse_precedence(Precedence precedence)
 {
     advance();
     ParseFn prefix_rule = get_rule(parser.previous.type)->prefix;
@@ -542,16 +542,16 @@ __internal void parse_precedence(Precedence precedence)
         error("Invalid assignment target.");
 }
 
-__internal uint8_t identifier_constant(Token* name) { return make_constant(OBJ_VAL(copy_string(name->start, name->length))); }
+static uint8_t identifier_constant(Token* name) { return make_constant(OBJ_VAL(copy_string(name->start, name->length))); }
 
-__internal bool identifiers_equal(Token* a, Token* b)
+static bool identifiers_equal(Token* a, Token* b)
 {
     if (a->length != b->length)
         return false;
     return memcmp(a->start, b->start, a->length) == 0;
 }
 
-__internal int resolve_local(Compiler* compiler, Token* name)
+static int resolve_local(Compiler* compiler, Token* name)
 {
     for (int i = compiler->local_count - 1; i >= 0; i--) {
         Local* local = &compiler->locals[i];
@@ -566,7 +566,7 @@ __internal int resolve_local(Compiler* compiler, Token* name)
     return -1;
 }
 
-__internal int add_upvalue(Compiler* compiler, uint8_t index, bool is_local)
+static int add_upvalue(Compiler* compiler, uint8_t index, bool is_local)
 {
     int upvalue_count = compiler->function->upvalue_count;
 
@@ -586,7 +586,7 @@ __internal int add_upvalue(Compiler* compiler, uint8_t index, bool is_local)
     return compiler->function->upvalue_count++;
 }
 
-__internal int resolve_upvalue(Compiler* compiler, Token* name)
+static int resolve_upvalue(Compiler* compiler, Token* name)
 {
     if (!compiler->enclosing)
         return -1;
@@ -604,7 +604,7 @@ __internal int resolve_upvalue(Compiler* compiler, Token* name)
     return -1;
 }
 
-__internal void add_local(Token name)
+static void add_local(Token name)
 {
     if (current->local_count == UINT8_COUNT) {
         error("Too many local variables in function.");
@@ -617,7 +617,7 @@ __internal void add_local(Token name)
     local->is_captured = false;
 }
 
-__internal void declare_variable()
+static void declare_variable()
 {
     if (current->scope_depth == 0)
         return;
@@ -636,7 +636,7 @@ __internal void declare_variable()
     add_local(*name);
 }
 
-__internal uint8_t parse_variable(const char* error_message)
+static uint8_t parse_variable(const char* error_message)
 {
     consume(TOKEN_IDENTIFIER, error_message);
 
@@ -647,7 +647,7 @@ __internal uint8_t parse_variable(const char* error_message)
     return identifier_constant(&parser.previous);
 }
 
-__internal void mark_initialized()
+static void mark_initialized()
 {
     if (current->scope_depth == 0)
         return;
@@ -655,7 +655,7 @@ __internal void mark_initialized()
     current->locals[current->local_count - 1].depth = current->scope_depth;
 }
 
-__internal void define_variable(uint8_t global)
+static void define_variable(uint8_t global)
 {
     if (current->scope_depth > 0) {
         mark_initialized();
@@ -664,7 +664,7 @@ __internal void define_variable(uint8_t global)
     emit_bytes(OP_DEFINE_GLOBAL, global);
 }
 
-__internal uint8_t argument_list()
+static uint8_t argument_list()
 {
     uint8_t arg_count = 0;
     if (!check(TOKEN_RIGHT_PAREN)) {
@@ -678,7 +678,7 @@ __internal uint8_t argument_list()
     return arg_count;
 }
 
-__internal void and_(bool can_assign)
+static void and_(bool can_assign)
 {
     (void)can_assign;
     int end_jump = emit_jump(OP_JUMP_IF_FALSE);
@@ -689,15 +689,15 @@ __internal void and_(bool can_assign)
     patch_jump(end_jump);
 }
 
-__internal ParseRule* get_rule(TokenType type) { return &rules[type]; }
+static ParseRule* get_rule(TokenType type) { return &rules[type]; }
 
-__internal void expression()
+static void expression()
 {
     // Compile the operand.
     parse_precedence(PREC_ASSIGNMENT);
 }
 
-__internal void block()
+static void block()
 {
     while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
         declaration();
@@ -706,7 +706,7 @@ __internal void block()
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");
 }
 
-__internal void function(FunctionType type)
+static void function(FunctionType type)
 {
     Compiler compiler;
     init_compiler(&compiler, type);
@@ -734,7 +734,7 @@ __internal void function(FunctionType type)
     }
 }
 
-__internal void method()
+static void method()
 {
     consume(TOKEN_IDENTIFIER, "Expect method name.");
     uint8_t constant = identifier_constant(&parser.previous);
@@ -747,7 +747,7 @@ __internal void method()
     emit_bytes(OP_METHOD, constant);
 }
 
-__internal void class_declaration()
+static void class_declaration()
 {
     consume(TOKEN_IDENTIFIER, "Expect class name.");
     Token class_name = parser.previous;
@@ -793,7 +793,7 @@ __internal void class_declaration()
     current_class = current_class->enclosing;
 }
 
-__internal void fun_declaration()
+static void fun_declaration()
 {
     uint8_t global = parse_variable("Expect function name.");
     mark_initialized();
@@ -801,7 +801,7 @@ __internal void fun_declaration()
     define_variable(global);
 }
 
-__internal void var_declaration()
+static void var_declaration()
 {
     uint8_t global = parse_variable("Expect variable name.");
 
@@ -814,14 +814,14 @@ __internal void var_declaration()
     define_variable(global);
 }
 
-__internal void print_statement()
+static void print_statement()
 {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after value.");
     emit_byte(OP_PRINT);
 }
 
-__internal void return_statement()
+static void return_statement()
 {
     if (current->type == TYPE_SCRIPT)
         error("Can't return from top-level code.");
@@ -838,7 +838,7 @@ __internal void return_statement()
     }
 }
 
-__internal void while_statement()
+static void while_statement()
 {
     int loop_start = current_chunk()->count;
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
@@ -853,7 +853,7 @@ __internal void while_statement()
     emit_byte(OP_POP);
 }
 
-__internal void synchronize()
+static void synchronize()
 {
     parser.panic_mode = false;
 
@@ -878,14 +878,14 @@ __internal void synchronize()
     }
 }
 
-__internal void expression_statement()
+static void expression_statement()
 {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
     emit_byte(OP_POP);
 }
 
-__internal void for_statement()
+static void for_statement()
 {
     begin_scope();
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
@@ -931,7 +931,7 @@ __internal void for_statement()
     end_scope();
 }
 
-__internal void if_statement()
+static void if_statement()
 {
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
     expression();
@@ -951,7 +951,7 @@ __internal void if_statement()
     patch_jump(else_jump);
 }
 
-__internal void declaration()
+static void declaration()
 {
     if (match(TOKEN_CLASS)) {
         class_declaration();
@@ -967,7 +967,7 @@ __internal void declaration()
         synchronize();
 }
 
-__internal void statement()
+static void statement()
 {
     if (match(TOKEN_PRINT)) {
         print_statement();
